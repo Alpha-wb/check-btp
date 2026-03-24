@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+*.db
+server/uploads/*
+!server/uploads/.gitkeep
+.DS_Store
+Thumbs.db
+.claude/
+package-lock.json
+start-*.bat
+*.pdf
+*.xlsx
+*.docx
+*.jpg
+*.png
+!client/public/*
