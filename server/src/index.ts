@@ -40,9 +40,13 @@ async function start() {
     res.sendFile(path.join(clientDist, 'index.html'));
   });
 
-  app.listen(PORT, () => {
-    console.log(`Check BTP running on http://localhost:${PORT}`);
+  const HOST = '0.0.0.0';
+  app.listen(Number(PORT), HOST, () => {
+    console.log(`Check BTP running on ${HOST}:${PORT}`);
   });
 }
 
-start().catch(console.error);
+start().catch((err) => {
+  console.error('FATAL: Failed to start server:', err);
+  process.exit(1);
+});
