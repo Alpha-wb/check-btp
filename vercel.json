@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "server/dist/index.js", "use": "@vercel/node" },
+    { "src": "client/dist/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/server/dist/index.js" },
+    { "src": "/uploads/(.*)", "dest": "/server/dist/index.js" },
+    { "src": "/(.*\\.(js|css|svg|png|jpg|jpeg|gif|ico|woff|woff2|ttf))", "dest": "/client/dist/$1" },
+    { "src": "/(.*)", "dest": "/client/dist/index.html" }
+  ],
+  "buildCommand": "npm run build"
+}
