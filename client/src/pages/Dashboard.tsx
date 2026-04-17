@@ -25,7 +25,7 @@ export default function Dashboard() {
     loadPrograms();
   };
 
-  const roleLabel = { moa: "Maître d'ouvrage", moe: "Maître d'œuvre", entreprise: 'Entreprise' }[user?.role || 'moe'];
+  const roleLabel = { superadmin: 'Super Admin', moa: "Maître d'ouvrage", moe: "Maître d'œuvre", entreprise: 'Entreprise' }[user?.role || 'moe'];
   const statusColors: Record<string, string> = { actif: 'bg-success', termine: 'bg-gray-400', suspendu: 'bg-warning' };
 
   return (

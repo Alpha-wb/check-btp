@@ -4,7 +4,7 @@ export interface User {
   password_hash: string;
   first_name: string;
   last_name: string;
-  role: 'moa' | 'moe' | 'entreprise';
+  role: 'superadmin' | 'moa' | 'moe' | 'entreprise';
   company?: string;
   phone?: string;
   created_at: string;

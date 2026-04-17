@@ -8,6 +8,8 @@ import operationsRoutes from './routes/operations.routes';
 import controlsRoutes from './routes/controls.routes';
 import reportsRoutes from './routes/reports.routes';
 import usersRoutes from './routes/users.routes';
+import boardRoutes from './routes/board.routes';
+import adminRoutes from './routes/admin.routes';
 
 const PORT = process.env.PORT || 3001;
 
@@ -18,6 +20,7 @@ async function start() {
   app.use(cors());
   app.use(express.json());
   app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+  app.use('/uploads/documents', express.static(path.join(__dirname, '..', 'uploads', 'documents')));
 
   app.get('/api/health', (_req, res) => res.json({ status: 'ok', name: 'Check BTP API' }));
 
@@ -27,6 +30,8 @@ async function start() {
   app.use('/api', controlsRoutes);
   app.use('/api/reports', reportsRoutes);
   app.use('/api', usersRoutes);
+  app.use('/api', boardRoutes);
+  app.use('/api/admin', adminRoutes);
 
   // Production: serve React frontend
   const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');

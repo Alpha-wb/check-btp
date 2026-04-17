@@ -23,3 +23,11 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
     return res.status(401).json({ error: 'Token invalide' });
   }
 }
+
+export function superAdminMiddleware(req: Request, res: Response, next: NextFunction) {
+  const user = (req as any).user;
+  if (!user || user.role !== 'superadmin') {
+    return res.status(403).json({ error: 'Accès réservé au Super Admin' });
+  }
+  next();
+}

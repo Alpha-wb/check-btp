@@ -1,20 +1,25 @@
 import { Router, Request, Response } from 'express';
 import { v4 as uuid } from 'uuid';
+import fs from 'fs';
+import path from 'path';
 import { getDb, saveDatabase } from '../db/database';
 import { authMiddleware } from '../middleware/auth';
+import { uploadDoc } from '../middleware/upload';
 
 const router = Router();
 router.use(authMiddleware);
 
 router.get('/', (req: Request, res: Response) => {
-  const { userId } = (req as any).user;
+  const { userId, role } = (req as any).user;
   const db = getDb();
-  const result = db.exec(`
-    SELECT DISTINCT p.* FROM programs p
-    LEFT JOIN program_members pm ON pm.program_id = p.id
-    WHERE p.created_by = '${userId}' OR pm.user_id = '${userId}'
-    ORDER BY p.created_at DESC
-  `);
+  // Superadmin voit TOUS les programmes
+  const query = role === 'superadmin'
+    ? `SELECT DISTINCT p.* FROM programs p ORDER BY p.created_at DESC`
+    : `SELECT DISTINCT p.* FROM programs p
+       LEFT JOIN program_members pm ON pm.program_id = p.id
+       WHERE p.created_by = '${userId}' OR pm.user_id = '${userId}'
+       ORDER BY p.created_at DESC`;
+  const result = db.exec(query);
 
   if (result.length === 0) return res.json([]);
 
@@ -113,6 +118,59 @@ router.post('/:id/members', (req: Request, res: Response) => {
 router.delete('/:id/members/:userId', (req: Request, res: Response) => {
   const db = getDb();
   db.run(`DELETE FROM program_members WHERE program_id = ? AND user_id = ?`, [req.params.id, req.params.userId]);
+  saveDatabase();
+  res.json({ success: true });
+});
+
+// ── Documents (CR, planning, plans, etc.) ──
+
+router.post('/:id/documents', uploadDoc.array('files', 10), (req: Request, res: Response) => {
+  const { userId } = (req as any).user;
+  const files = req.files as Express.Multer.File[];
+  if (!files?.length) return res.status(400).json({ error: 'Aucun fichier' });
+
+  const db = getDb();
+  const doc_type = (req.body.doc_type as string) || 'autre';
+  const operation_id = (req.body.operation_id as string) || null;
+  const docs: any[] = [];
+
+  for (const file of files) {
+    const id = uuid();
+    db.run(
+      `INSERT INTO documents (id, program_id, operation_id, doc_type, filename, original_name, path, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, req.params.id, operation_id, doc_type, file.filename, file.originalname, file.path, userId]
+    );
+    docs.push({ id, program_id: req.params.id, operation_id, doc_type, filename: file.filename, original_name: file.originalname, uploaded_at: new Date().toISOString() });
+  }
+  saveDatabase();
+  res.status(201).json(docs);
+});
+
+router.get('/:id/documents', (req: Request, res: Response) => {
+  const db = getDb();
+  const result = db.exec(`
+    SELECT d.*, u.first_name || ' ' || u.last_name as uploaded_by_name
+    FROM documents d LEFT JOIN users u ON u.id = d.uploaded_by
+    WHERE d.program_id = '${req.params.id}'
+    ORDER BY d.uploaded_at DESC
+  `);
+  if (result.length === 0) return res.json([]);
+  const cols = result[0].columns;
+  res.json(result[0].values.map(row => {
+    const obj: any = {};
+    cols.forEach((c, i) => obj[c] = row[i]);
+    return obj;
+  }));
+});
+
+router.delete('/:id/documents/:docId', (req: Request, res: Response) => {
+  const db = getDb();
+  const result = db.exec(`SELECT path FROM documents WHERE id = '${req.params.docId}' AND program_id = '${req.params.id}'`);
+  if (result.length > 0 && result[0].values.length > 0) {
+    const filePath = result[0].values[0][0] as string;
+    try { fs.unlinkSync(filePath); } catch {}
+  }
+  db.run(`DELETE FROM documents WHERE id = ? AND program_id = ?`, [req.params.docId, req.params.id]);
   saveDatabase();
   res.json({ success: true });
 });

@@ -9,6 +9,7 @@ import ProgramDetail from './pages/ProgramDetail';
 import OperationDetail from './pages/OperationDetail';
 import ControlForm from './pages/ControlForm';
 import Reports from './pages/Reports';
+import Admin from './pages/Admin';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/operations/:id" element={<PrivateRoute><OperationDetail /></PrivateRoute>} />
         <Route path="/controls/:id" element={<PrivateRoute><ControlForm /></PrivateRoute>} />
         <Route path="/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
+        <Route path="/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
       </Routes>
     </div>
   );

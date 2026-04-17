@@ -17,10 +17,13 @@ export async function runSeed() {
   // === USERS ===
   const pwHash = await bcrypt.hash('demo2024', 10);
 
+  const adminId = uuid();
   const moeId = uuid();
   const moaId = uuid();
   const entId = uuid();
 
+  db.run(`INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+    [adminId, 'admin@alpha-isi.fr', pwHash, 'Admin', 'ALPHA ISI', 'superadmin', 'GROUPE ALPHA ISI', '01 40 00 00 00']);
   db.run(`INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
     [moeId, 'moe@alpha-isi.fr', pwHash, 'Jean', 'Dupont', 'moe', 'GROUPE ALPHA ISI', '01 42 00 00 00']);
   db.run(`INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
@@ -89,6 +92,48 @@ export async function runSeed() {
       [uuid(), batB, fico, status, moeId, null, data]);
   }
 
+  // === PLANNING DE RÉFÉRENCE (Bâtiment A) ===
+  const planningA: [string, string][] = [
+    ['FICO01', '2024-06-15'], ['FICO02', '2024-06-20'], ['FICO03', '2024-07-01'],
+    ['FICO04', '2024-07-15'], ['FICO05', '2024-08-01'], ['FICO06', '2024-09-01'],
+    ['FICO07', '2024-10-01'], ['FICO09', '2024-11-01'], ['FICO10', '2024-12-01'],
+    ['FICO12', '2025-01-15'], ['FICO13', '2025-02-15'], ['FICO14', '2025-03-01'],
+    ['FICO15', '2025-04-01'], ['FICO16', '2025-05-01'], ['FICO17', '2025-05-15'],
+    ['FICO18', '2025-06-01'], ['FICO19', '2025-07-01'], ['FICO20', '2025-08-01'],
+    ['FICO21', '2025-09-01'], ['FICO23', '2025-10-01'], ['FICO24', '2025-11-01'],
+  ];
+  for (const [fico, date] of planningA) {
+    const ctrl = ficoDataA.find(f => f[0] === fico);
+    const actual = ctrl && ctrl[1] === 'conforme' ? date : null;
+    db.run(`INSERT INTO planning_reference VALUES (?, ?, ?, ?, ?)`,
+      [uuid(), batA, fico, date, actual]);
+  }
+
+  // Planning Bâtiment B (dates décalées de 3 mois)
+  const planningB: [string, string][] = [
+    ['FICO01', '2024-09-15'], ['FICO02', '2024-09-20'], ['FICO03', '2024-10-01'],
+    ['FICO04', '2024-10-15'],
+  ];
+  for (const [fico, date] of planningB) {
+    const ctrl = ficoDataB.find(f => f[0] === fico);
+    const actual = ctrl && ctrl[1] === 'conforme' ? date : null;
+    db.run(`INSERT INTO planning_reference VALUES (?, ?, ?, ?, ?)`,
+      [uuid(), batB, fico, date, actual]);
+  }
+
+  // === SUIVI INCONTOURNABLE (quelques checks démo pour Bâtiment A) ===
+  const suiviDemoChecks = [
+    ['ETAPE0', 'e0_01'], ['ETAPE0', 'e0_02'],
+    ['ETAPE1', 'e1_01'], ['ETAPE1', 'e1_02'], ['ETAPE1', 'e1_03'], ['ETAPE1', 'e1_04'],
+    ['ETAPE2', 'e2_01'], ['ETAPE2', 'e2_02'], ['ETAPE2', 'e2_03'],
+    ['ETAPE3', 'e3_01'],
+    ['ETAPE4', 'e4_01'], ['ETAPE4', 'e4_02'], ['ETAPE4', 'e4_03'],
+  ];
+  for (const [etape, item] of suiviDemoChecks) {
+    db.run(`INSERT INTO suivi_checks VALUES (?, ?, ?, ?, 1, ?, datetime('now'))`,
+      [uuid(), batA, etape, item, moeId]);
+  }
+
   // === NOTIFICATIONS ===
   db.run(`INSERT INTO notifications VALUES (?, ?, ?, ?, 0, ?, datetime('now'))`,
     [uuid(), moeId, 'control', 'Non-conformité FICO07 Bât.A : Faux aplomb mur SdB lot 12', progId]);
@@ -103,6 +148,7 @@ export async function runSeed() {
   console.log('Seed completed!');
   console.log('');
   console.log('Comptes de démonstration :');
+  console.log('  ADMIN: admin@alpha-isi.fr / demo2024 (Super Admin)');
   console.log('  MOE  : moe@alpha-isi.fr / demo2024');
   console.log('  MOA  : moa@alpha-isi.fr / demo2024');
   console.log('  ENT  : entreprise@alpha-isi.fr / demo2024');
