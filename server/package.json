@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc && cp src/db/schema.sql dist/db/schema.sql",
+    "build": "tsc && node -e \"const fs=require('fs'),path=require('path');fs.mkdirSync(path.join('dist','db'),{recursive:true});fs.copyFileSync(path.join('src','db','schema.sql'),path.join('dist','db','schema.sql'))\"",
     "start": "node dist/index.js"
   },
   "dependencies": {
