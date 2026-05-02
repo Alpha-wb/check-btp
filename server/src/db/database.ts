@@ -2,8 +2,14 @@ import initSqlJs, { Database } from 'sql.js';
 import fs from 'fs';
 import path from 'path';
 
-const DB_PATH = path.join(__dirname, '..', '..', 'checkbtp.db');
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', '..', 'checkbtp.db');
 const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
+
+// S'assurer que le dossier parent de DB_PATH existe (pour Fly.io /data)
+const DB_DIR = path.dirname(DB_PATH);
+if (!fs.existsSync(DB_DIR)) {
+  fs.mkdirSync(DB_DIR, { recursive: true });
+}
 
 let db: Database;
 

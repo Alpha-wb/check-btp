@@ -1,9 +1,19 @@
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import { v4 as uuid } from 'uuid';
 
+// Chemin uploads : variable d'env (Fly.io /data) ou dossier local par défaut
+const UPLOADS_BASE = process.env.UPLOADS_PATH || path.join(__dirname, '..', '..', 'uploads');
+const DOCS_PATH = path.join(UPLOADS_BASE, 'documents');
+
+// Créer les dossiers s'ils n'existent pas
+[UPLOADS_BASE, DOCS_PATH].forEach(p => {
+  if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
+});
+
 const storage = multer.diskStorage({
-  destination: path.join(__dirname, '..', '..', 'uploads'),
+  destination: UPLOADS_BASE,
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname);
     cb(null, `${uuid()}${ext}`);
@@ -23,7 +33,7 @@ export const upload = multer({
 
 // Upload pour documents (PDF, Excel, images, etc.)
 const docStorage = multer.diskStorage({
-  destination: path.join(__dirname, '..', '..', 'uploads', 'documents'),
+  destination: DOCS_PATH,
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname);
     cb(null, `${uuid()}${ext}`);
@@ -34,8 +44,8 @@ export const uploadDoc = multer({
   storage: docStorage,
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    const allowed = /pdf|xlsx|xls|docx|doc|jpeg|jpg|png|dwg|zip|csv/;
-    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
-    cb(null, ext || true);
+    // Filtre strict : seuls les fichiers documents légitimes
+    const allowed = /\.(pdf|xlsx|xls|docx|doc|jpeg|jpg|png|webp|dwg|zip|csv|txt)$/i;
+    cb(null, allowed.test(file.originalname));
   }
 });

@@ -19,8 +19,9 @@ async function start() {
   const app = express();
   app.use(cors());
   app.use(express.json());
-  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
-  app.use('/uploads/documents', express.static(path.join(__dirname, '..', 'uploads', 'documents')));
+  const UPLOADS_BASE = process.env.UPLOADS_PATH || path.join(__dirname, '..', 'uploads');
+  app.use('/uploads', express.static(UPLOADS_BASE));
+  app.use('/uploads/documents', express.static(path.join(UPLOADS_BASE, 'documents')));
 
   app.get('/api/health', (_req, res) => res.json({ status: 'ok', name: 'Check BTP API' }));
 
